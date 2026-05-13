@@ -1,0 +1,22 @@
+# Local config — contains WiFi credentials and server IP, never commit
+firmware/src/config.h
+
+# PlatformIO build artifacts
+firmware/.pio/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+server/__pycache__/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

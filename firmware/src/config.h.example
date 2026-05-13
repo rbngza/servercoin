@@ -1,0 +1,27 @@
+#pragma once
+
+// ── WiFi ─────────────────────────────────────────────────────────────────────
+#define WIFI_SSID  "YOUR_SSID"
+#define WIFI_PASS  "YOUR_PASSWORD"
+
+// ── Nexus server ─────────────────────────────────────────────────────────────
+#define SERVER_HOST "192.168.1.100"    // static IP or mDNS hostname of Nexus
+#define SERVER_PORT 8000
+
+// ── Wake-on-LAN ──────────────────────────────────────────────────────────────
+#define WOL_MAC "AA:BB:CC:DD:EE:FF"  // Nexus NIC MAC (run: ip link show)
+
+// ── Display pins (Waveshare ESP32-C3 LCD 1.28" defaults) ─────────────────────
+// Adjust to match your board's silkscreen if different.
+#define DISP_SCK   6
+#define DISP_MOSI  7
+#define DISP_CS   10
+#define DISP_DC    2
+#define DISP_RST   3
+#define DISP_BL   11
+
+// ── Capacitive touch pins (CST816S) ──────────────────────────────────────────
+#define TOUCH_SDA  4
+#define TOUCH_SCL  5
+#define TOUCH_INT  0
+#define TOUCH_RST  1   // -1 if not connected
