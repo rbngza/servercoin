@@ -64,7 +64,7 @@ void ui_prev_screen() {
 
 void ui_update(const Metrics &m) {
     screen_home_update(m);
-    screen_cpu_update(m.cpu);
+    screen_cpu_update(m.cpu, m.cpu_temp_c, m.nvme_temp_c);
     screen_ram_update(m.ram_percent, m.ram_used_gb, m.ram_total_gb);
     screen_network_update(m.net_sent_kbs, m.net_recv_kbs);
 }

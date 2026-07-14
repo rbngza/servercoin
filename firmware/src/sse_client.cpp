@@ -28,6 +28,8 @@ static bool parse_metrics(const String &data) {
     g_metrics.ram_total_gb = doc["ram"]["total_gb"] | 0.0f;
     g_metrics.net_sent_kbs = doc["net"]["sent_kbs"] | 0.0f;
     g_metrics.net_recv_kbs = doc["net"]["recv_kbs"] | 0.0f;
+    g_metrics.cpu_temp_c   = doc["temp"]["cpu_c"]   | -1.0f;  // null -> -1
+    g_metrics.nvme_temp_c  = doc["temp"]["nvme_c"]  | -1.0f;  // null -> -1
     g_metrics.uptime_s     = doc["uptime_s"]        | 0u;
     g_metrics.online       = (strcmp(doc["status"] | "", "online") == 0);
     g_metrics.valid        = true;

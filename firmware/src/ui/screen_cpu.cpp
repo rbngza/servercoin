@@ -3,9 +3,18 @@
 
 static lv_obj_t         *_screen;
 static lv_obj_t         *_arc;
-static lv_obj_t         *_pct_label;  // child of _arc — always drawn on top
+static lv_obj_t         *_pct_label;   // child of _arc — always drawn on top
+static lv_obj_t         *_temp_label;  // CPU temp, under the percentage
 static lv_obj_t         *_chart;
+static lv_obj_t         *_nvme_label;  // SSD temp, below the sparkline
 static lv_chart_series_t *_series;
+
+// Green/yellow/red by temperature (°C) — mirrors ui_gauge_color for percent.
+static lv_color_t temp_color(float c) {
+    if (c >= 80.0f) return lv_color_hex(C_RED);
+    if (c >= 65.0f) return lv_color_hex(C_YELLOW);
+    return lv_color_hex(C_GREEN);
+}
 
 lv_obj_t *screen_cpu_create() {
     _screen = lv_obj_create(NULL);
@@ -43,6 +52,13 @@ lv_obj_t *screen_cpu_create() {
     lv_obj_set_style_text_color(_pct_label, lv_color_hex(C_GREEN), 0);
     lv_obj_center(_pct_label);  // centred within the arc bounding box
 
+    // CPU temperature — small label just under the percentage, inside the arc
+    _temp_label = lv_label_create(_arc);
+    lv_label_set_text(_temp_label, "--\xC2\xB0" "C");
+    lv_obj_set_style_text_font(_temp_label, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(_temp_label, lv_color_hex(C_MUTED), 0);
+    lv_obj_align(_temp_label, LV_ALIGN_CENTER, 0, 24);
+
     // Sparkline chart — 30 readings, no axes/dots/dividers
     _chart = lv_chart_create(_screen);
     lv_obj_set_size(_chart, 160, 34);
@@ -59,17 +75,42 @@ lv_obj_t *screen_cpu_create() {
     _series = lv_chart_add_series(_chart, lv_color_hex(C_CYAN), LV_CHART_AXIS_PRIMARY_Y);
     for (int i = 0; i < 30; i++) lv_chart_set_next_value(_chart, _series, 0);
 
+    // SSD/NVMe temperature — stacked under the CPU temp, inside the arc's open
+    // bottom wedge (no room below the chart before the nav dots)
+    _nvme_label = lv_label_create(_arc);
+    lv_label_set_text(_nvme_label, "SSD --\xC2\xB0" "C");
+    lv_obj_set_style_text_font(_nvme_label, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(_nvme_label, lv_color_hex(C_MUTED), 0);
+    lv_obj_align(_nvme_label, LV_ALIGN_CENTER, 0, 44);
+
     ui_draw_nav_dots(_screen, 1, lv_color_hex(C_CYAN));
     return _screen;
 }
 
-void screen_cpu_update(float cpu_pct) {
+void screen_cpu_update(float cpu_pct, float cpu_temp_c, float nvme_temp_c) {
     lv_color_t col = ui_gauge_color(cpu_pct);
     lv_arc_set_value(_arc, (int32_t)cpu_pct);
     lv_obj_set_style_arc_color(_arc, col, LV_PART_INDICATOR);
     lv_label_set_text_fmt(_pct_label, "%.0f%%", (double)cpu_pct);
     lv_obj_set_style_text_color(_pct_label, col, 0);
     lv_chart_set_next_value(_chart, _series, (lv_coord_t)cpu_pct);
+
+    // CPU temperature (negative = sensor unavailable)
+    if (cpu_temp_c < 0.0f) {
+        lv_label_set_text(_temp_label, "--\xC2\xB0" "C");
+        lv_obj_set_style_text_color(_temp_label, lv_color_hex(C_MUTED), 0);
+    } else {
+        lv_label_set_text_fmt(_temp_label, "%.0f\xC2\xB0" "C", (double)cpu_temp_c);
+        lv_obj_set_style_text_color(_temp_label, temp_color(cpu_temp_c), 0);
+    }
+
+    // SSD/NVMe temperature
+    if (nvme_temp_c < 0.0f) {
+        lv_label_set_text(_nvme_label, "SSD --\xC2\xB0" "C");
+    } else {
+        lv_label_set_text_fmt(_nvme_label, "SSD %.0f\xC2\xB0" "C", (double)nvme_temp_c);
+    }
+
     // Only trigger chart redraw when this screen is actually visible
     if (lv_scr_act() == _screen) lv_chart_refresh(_chart);
 }

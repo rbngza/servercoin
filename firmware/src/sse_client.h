@@ -8,6 +8,8 @@ struct Metrics {
     float    ram_total_gb = 0.0f;
     float    net_sent_kbs = 0.0f;
     float    net_recv_kbs = 0.0f;
+    float    cpu_temp_c   = -1.0f;   // -1 = sensor unavailable
+    float    nvme_temp_c  = -1.0f;   // -1 = sensor unavailable
     uint32_t uptime_s     = 0;
     bool     online       = false;
     bool     valid        = false;
