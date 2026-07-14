@@ -1,0 +1,23 @@
+services:
+  servercoin:
+    build: .
+    container_name: servercoin
+    restart: unless-stopped
+    network_mode: host   # psutil sees real host interfaces for net I/O
+    pid: host            # psutil sees host processes and accurate CPU/RAM
+    env_file: .env
+
+  nginx:
+    image: nginx:alpine
+    container_name: servercoin-nginx
+    restart: unless-stopped
+    network_mode: host   # reaches FastAPI via 127.0.0.1:8000
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/servercoin.conf:ro
+      # Mount the full Let's Encrypt tree read-only. The files under
+      # live/<domain>/ are symlinks into ../../archive/<domain>/, so mounting
+      # only live/<domain> leaves them dangling inside the container and nginx
+      # fails with "cannot load certificate ... No such file or directory".
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - servercoin
