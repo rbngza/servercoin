@@ -1,11 +1,16 @@
 import asyncio
 import json
+import os
 
-from fastapi import FastAPI
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 
 from metrics import get_all_metrics, get_processes
+
+load_dotenv()
+_API_KEY = os.getenv("API_KEY", "")
 
 app = FastAPI(title="Nexus Health API")
 
@@ -13,19 +18,22 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["GET"],
-    allow_headers=["*"],
+    allow_headers=["*", "Authorization"],
 )
 
 
-@app.get("/health")
+async def verify_key(authorization: str = Header(None)):
+    if not _API_KEY or authorization != f"Bearer {_API_KEY}":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+@app.get("/health", dependencies=[Depends(verify_key)])
 async def health():
-    """One-shot snapshot of all current metrics."""
     return get_all_metrics()
 
 
-@app.get("/stream")
+@app.get("/stream", dependencies=[Depends(verify_key)])
 async def stream():
-    """SSE endpoint — pushes a 'metrics' event every 2 seconds."""
     async def event_generator():
         while True:
             data = get_all_metrics()
@@ -35,9 +43,8 @@ async def stream():
     return EventSourceResponse(event_generator())
 
 
-@app.get("/processes")
+@app.get("/processes", dependencies=[Depends(verify_key)])
 async def processes():
-    """Top 8 processes by CPU usage."""
     return get_processes(n=8)
 
 
