@@ -13,7 +13,10 @@ services:
     restart: unless-stopped
     network_mode: host   # reaches FastAPI via 127.0.0.1:8000
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/servercoin.conf:ro
+      # Mount over the image's default.conf (which listens on :80). With
+      # network_mode: host that :80 collides with the Pterodactyl panel already
+      # on the host. Replacing default.conf leaves only our :443 server block.
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       # Mount the full Let's Encrypt tree read-only. The files under
       # live/<domain>/ are symlinks into ../../archive/<domain>/, so mounting
       # only live/<domain> leaves them dangling inside the container and nginx
